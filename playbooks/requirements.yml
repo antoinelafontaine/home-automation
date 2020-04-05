@@ -1,0 +1,2 @@
+# Install minecraft role using Ansible Galaxy
+- src: https://github.com/great-old-ones/ansible-minecraft

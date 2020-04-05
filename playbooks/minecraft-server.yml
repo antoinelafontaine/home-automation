@@ -1,0 +1,19 @@
+---
+  - name: "Minecraft server"
+    hosts: localhost
+    connection: local
+    roles:
+      - {
+          role: ansible-minecraft,
+          minecraft_version: '20w14a',
+          minecraft_max_memory: '2048M',
+          minecraft_whitelist: ["Neverprint", "Dasumato"],
+          minecraft_server_properties: {
+            server-port: 25565,
+            motd: 'Mineshaft - Minecraft Server',
+            whitelist: true,
+            pvp: false,
+            max-player: 10,
+            view-distance: 12,
+          },
+        }
