@@ -1,0 +1,23 @@
+---
+  - name: "Minecraft RCON tool"
+    hosts: localhost
+    connection: local
+    become: yes
+    become_user: root
+
+    tasks:
+      - name: Clone MCRCON repo
+        git:
+          repo: https://github.com/Tiiffi/mcrcon.git
+          dest: ~/src/mcrcon
+
+      - name: Make MCRCON
+        make:
+          chdir: ~/src/mcrcon
+        become: yes
+
+      - name: Make install MCRCON
+        make:
+          chdir: ~/src/mcrcon
+          target: install
+        become: yes

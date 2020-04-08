@@ -2,18 +2,57 @@
   - name: "Minecraft server"
     hosts: localhost
     connection: local
-    roles:
-      - {
-          role: ansible-minecraft,
-          minecraft_version: '20w14a',
-          minecraft_max_memory: '2048M',
-          minecraft_whitelist: ["Neverprint", "Dasumato"],
+    vars:
+      mcrcon_port: 25575
+      mcrcon_host: '127.0.0.1'
+    tasks:
+      - name: Insure profile.d folder exists to store rcon password
+        file:
+          path: '~/.profile.d'
+          owner: "{{ ansible_env.SUDO_USER }}"
+          group: "{{ ansible_env.SUDO_USER }}"
+          state: directory
+      - name: Install and configure Minecraft Server
+        include_role:
+          name: ansible-minecraft
+        vars:
+          minecraft_eula_accept: true
+          minecraft_version: '20w15a'
+          minecraft_max_memory: '2048M'
+          minecraft_whitelist: ['Neverprint', 'Dasumato', 'FrontalGyrus']
           minecraft_server_properties: {
             server-port: 25565,
+            level-name: 'watermelon-paradise',
             motd: 'Mineshaft - Minecraft Server',
             whitelist: true,
             pvp: false,
-            max-player: 10,
-            view-distance: 12,
-          },
-        }
+            difficulty: 'normal',
+            max-playeris: 10,
+            view-distance: 16,
+            rcon.port: "{{ mcrcon_port }}",
+            enable-rcon: true,
+            rcon.password: "{{ lookup('password', '~/.profile.d/rcon.password length=30 chars=ascii_letters,digits,punctuation') }}" 
+          }
+      - name: Insure mcrcon.sh exits
+        file:
+          path: ~/.profile.d/mcrcon.sh
+          owner: "{{ ansible_env.SUDO_USER }}"
+          group: "{{ ansible_env.SUDO_USER }}"
+          state: touch
+      - name: Insure password file is owned by the user
+        file:
+          path: ~/.profile.d/rcon.password
+          owner: "{{ ansible_env.SUDO_USER }}"
+          group: "{{ ansible_env.SUDO_USER }}"
+      - name: Create MCRCON environment variables
+        blockinfile:
+          dest: ~/.profile.d/mcrcon.sh
+          block: |
+            # export environment variables for MCRCON
+            export MCRCON_PORT={{ mcrcon_port }}
+            export MCRCON_HOST={{ mcrcon_host }}
+            
+            if [ -f "$HOME/.profile.d/rcon.password" ] ; then
+              password=$(head -n 1 ~/.profile.d/rcon.password)
+              export MCRCON_PASS=$password
+            fi

@@ -1,0 +1,22 @@
+---
+  - name: "Setup Profile"
+    hosts: localhost
+    connection: local
+    
+    tasks:
+      - name: Insure .profile.d folder
+        file:
+          path: ~/.profile.d 
+          state: directory 
+      - name: Add ability to source any .sh file found in .profile.d folder
+        blockinfile:
+          dest: ~/.profile
+          block: |
+            # source all .sh files in .profile.d folder
+            if [ -d "$HOME/.profile.d" ] ; then
+                files=`ls ~/.profile.d | grep .sh`
+                for file in $files
+                do
+                    source "$HOME/.profile.d/$file"
+                done
+            fi
