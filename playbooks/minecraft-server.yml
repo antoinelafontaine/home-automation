@@ -28,7 +28,7 @@
             pvp: false,
             difficulty: 'normal',
             max-playeris: 10,
-            view-distance: 16,
+            view-distance: 8,
             rcon.port: "{{ mcrcon_port }}",
             enable-rcon: true,
             rcon.password: "{{ lookup('password', '~/.profile.d/rcon.password length=30 chars=ascii_letters,digits,punctuation') }}" 

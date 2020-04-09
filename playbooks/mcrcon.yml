@@ -10,6 +10,8 @@
         git:
           repo: https://github.com/Tiiffi/mcrcon.git
           dest: ~/src/mcrcon
+        become: yes
+        become_user: "{{ ansible_env.SUDO_USER }}"
 
       - name: Make MCRCON
         make:

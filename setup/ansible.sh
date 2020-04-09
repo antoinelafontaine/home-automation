@@ -1,4 +1,4 @@
-# /bin/bash
+#!/bin/bash
 
 sudo apt-add-repository ppa:ansible/ansible
 sudo apt update
