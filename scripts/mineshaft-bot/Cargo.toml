@@ -1,0 +1,17 @@
+[package]
+name = "mineshaft-bot"
+version = "0.1.0"
+authors = ["Antoine Lafontaine <antoine.lafontaine@neverprint.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { version = "0.10", features = ["blocking", "json"] }
+daemonize = "0.4.1"
+notify = "4.0.12"
+serde = "1.0.106"
+serde_json = "1.0"
+recap = "0.1.1"
+envy = "0.4"
+easy_reader = "0.5.0"

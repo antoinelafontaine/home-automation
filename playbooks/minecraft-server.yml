@@ -17,8 +17,8 @@
           name: ansible-minecraft
         vars:
           minecraft_eula_accept: true
-          minecraft_version: '20w15a'
-          minecraft_max_memory: '2048M'
+          minecraft_version: '20w17a'
+          minecraft_max_memory: '4096M'
           minecraft_whitelist: ['Neverprint', 'Dasumato', 'FrontalGyrus']
           minecraft_server_properties: {
             server-port: 25565,

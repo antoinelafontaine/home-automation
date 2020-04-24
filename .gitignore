@@ -1,0 +1,3 @@
+scripts/**/target/
+scripts/**/Cargo.lock
+scripts/**/*.rs.bk

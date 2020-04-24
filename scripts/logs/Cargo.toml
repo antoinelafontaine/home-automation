@@ -1,0 +1,15 @@
+[package]
+name = "logs"
+version = "0.1.0"
+authors = ["Antoine Lafontaine <antoine.lafontaine@neverprint.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hyper = "0.13"
+tokio = { version = "0.2", features = ["full"] }
+serde = "1.0.106"
+recap = "0.1.1"
+envy = "0.4"
+easy_reader = "0.5.0"
