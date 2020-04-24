@@ -6,17 +6,13 @@ extern crate daemonize;
 extern crate envy;
 extern crate recap;
 extern crate serde;
-
-#[macro_use]
 extern crate serde_json;
-
-use reqwest::Client;
 
 use std::fs::File;
 use std::error::Error;
 use std::time::Duration;
+use std::thread;
 use std::sync::mpsc::channel;
-// use std::collections::HashMap;
 
 use notify::{Watcher, RecursiveMode, watcher};
 use daemonize::Daemonize;
@@ -25,7 +21,7 @@ use serde::Deserialize;
 use easy_reader::EasyReader;
 
 // Environement variable parser
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 struct Env {
     discord_mineshaft_webhook: String,
 }
@@ -92,73 +88,92 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             let (tx, rx) = channel();
             let mut watcher = watcher(tx, Duration::from_millis(300)).unwrap();
-            
+            let client = reqwest::blocking::Client::new();
+
             watcher.watch(minecraft_logs, RecursiveMode::Recursive).unwrap();
 
             loop {
-                match rx.recv() {
-                    Err(e) => println!("watch error: {:?}", e),
-                    Ok(event) => {
-                        match event {
-                            notify::DebouncedEvent::Write(_) => {
-                                
-                                // Rewind to last log entry
-                                match File::open(minecraft_logs) {
-                                    Err(e) => return Err(From::from(e)),
-                                    Ok(logs) => {
-                                        reader = EasyReader::new(logs)?;
-                                        reader.eof();
-                                        loop {
-                                            match reader.prev_line()? {
-                                                None => break,
-                                                Some(line) => {
-                                                    if line == last_log_entry {
-                                                        break;
-                                                    }
+                let event = rx.recv()?;
+                
+                match event {
+                    notify::DebouncedEvent::Write(_) |
+                    notify::DebouncedEvent::Create(_) |
+                    notify::DebouncedEvent::Remove(_) => {
+                        
+                        // Rewind to last log entry
+                        let logs = File::open(minecraft_logs)?;
+
+                        reader = EasyReader::new(logs)?;
+                        reader.eof();
+                        loop {
+                            match reader.prev_line()? {
+                                None => break,
+                                Some(line) => {
+                                    if line == last_log_entry {
+                                        break;
+                                    }
+                                },
+                            }
+                        }
+
+                        loop {
+                            match reader.next_line()? {
+                                None => break,
+                                Some(line) => {
+                                    match line.parse::<MinecraftLog>() {
+                                        Ok(entry) => {
+                                            println!("{:#?}", entry);
+                                            match check_message(entry.message) {
+                                                Ok(message) => {
+                                                    let response = client.post(&discord_webhook)
+                                                    .json(&serde_json::json!({
+                                                        "content": message,
+                                                    })).send()?;
+                                                    println!("{:#?}", response);
                                                 },
+                                                _ => ()
                                             }
-                                        }
-                                    },
-                                };
-
-                                loop {
-                                    match reader.next_line()? {
-                                        None => break,
-                                        Some(line) => {
-                                            match line.parse::<MinecraftLog>() {
-                                                Ok(entry) => {
-                                                    println!("{:#?}", entry);
-                                                    let message_body = json!({
-                                                        "content": entry.message
-                                                    });
-                                                    let mut response = Client::new()
-                                                        .post(&discord_webhook)
-                                                        .json(&message_body)
-                                                        .send()?;
-                                                    match response {
-                                                        Err(e) => return Err(From::from(e)),
-                                                        Ok(_) => {
-                                                            println!("{:#?}", response);
-                                                            last_log_entry = line;
-                                                        }
-                                                    }
-                                                },
-                                                // If there is an error parsing the line, skip it.
-                                                _ => (),
-                                            } 
-                                        }
-                                    }        
+                                            last_log_entry = line;
+                                        },
+                                        // If there is an error parsing the line, skip it.
+                                        _ => (),
+                                    } 
                                 }
-                            },
-
-                            // do nothing on events other than Write.
-                            _ => (),
+                            } 
+                            // wait before next post to not overload the Discord api
+                            thread::sleep(Duration::from_millis(300));       
                         }
                     },
+
+                    // do nothing on events other than Write.
+                    _ => (),
                 }
             }
         },
     }
 
     Ok(())
+}
+
+#[derive(Debug)]
+pub enum MessageError {
+    MessageDiscarded,
+    UnknownMessage,
+}
+
+fn check_message(message: String) -> Result<String, MessageError> {
+    if message.contains("logged in with entity") ||
+       message.contains("lost connection: Disconnected") ||
+       message.contains("UUID of player") {
+        return Err(MessageError::MessageDiscarded);
+    }
+
+    if message.contains("joined the game") {
+        return Ok(format!("```css\n- {}```", message));
+    }
+    if message.contains("left the game") {
+        return Ok(format!("```diff\n- {}```", message));
+    }
+        
+    Ok(message)
 }
