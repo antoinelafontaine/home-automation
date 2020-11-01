@@ -17,15 +17,22 @@
           name: ansible-minecraft
         vars:
           minecraft_eula_accept: true
-          minecraft_version: '20w17a'
+          minecraft_version: '1.16.1'
+          # minecraft_version: '20w21a'
           minecraft_max_memory: '4096M'
-          minecraft_whitelist: ['Neverprint', 'Dasumato', 'FrontalGyrus']
+          minecraft_whitelist: ['Neverprint', 'Dasumato', 'xymox1975', 'vic_gaming']
+          # minecraft_whitelist: ['Neverprint', 'Dasumato', 'FrontalGyrus']
           minecraft_server_properties: {
             server-port: 25565,
-            level-name: 'watermelon-paradise',
+            level-name: 'pvp',
+            seed: '2629777217757384275',
+            # level-name: 'covid',
+            # level-name: 'speedrunner',
+            # level-name: 'watermelon-paradise',
             motd: 'Mineshaft - Minecraft Server',
             whitelist: true,
-            pvp: false,
+            pvp: true,
+            # pvp: false, 
             difficulty: 'normal',
             max-playeris: 10,
             view-distance: 8,
